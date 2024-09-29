@@ -73,7 +73,7 @@ pytest tests/
 Fork the repository, make changes, and submit a pull request. Include test cases for new functionality.
 
 ## License
-MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See the LICENSE file for details, or view the full license text at https://www.apache.org/licenses/LICENSE-2.0.html.
 
 ## Contact
 For questions or issues, contact the project maintainers.
