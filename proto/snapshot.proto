@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message Snapshot {
+    // Dynamic fields in Python are allowed, but here you need to define key fields
+    // Add fields according to the structure of your Snapshot
+    // For example:
+    string id = 1;
+    string data = 2; // Placeholder, replace with actual fields
+}
+
+message SnapshotList {
+    repeated Snapshot snapshots = 1;  // A list of Snapshot objects
+    string key = 2;                    // UUID for the SnapshotList
+    int64 time = 3;                    // Timestamp in milliseconds
+    string name = 4;                   // Name, default to "XLK"
+}

@@ -1,0 +1,10 @@
+# config/basic_usage_config.yaml
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+managers:
+  example_manager:
+    enabled: true
+    start_automatically: true

@@ -1,0 +1,5 @@
+{
+  "log_level": "INFO",
+  "log_format": "%(asctime)s - %(hostname)s - %(levelname)s - %(message)s",
+  "log_file": "app.log"
+}
