@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from common.custom_datetime import CustomDateTime, KERNEL_MODE_SIMULATED
+from zzv.common.custom_datetime import CustomDateTime, KERNEL_MODE_SIMULATED
 
 # Kernel Configuration
 # Set up the mode and simulated datetime (if needed)

@@ -3,9 +3,9 @@ import logging
 import os
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from common.constants import KERNEL
-from common.utility import load_config, start_server_request, check_health
-from engine.kernel import Kernel
+from zzv.common.constants import KERNEL
+from zzv.common.utility import load_config, start_server_request, check_health
+from zzv.engine.kernel import Kernel
 
 logger = logging.getLogger(__name__)
 

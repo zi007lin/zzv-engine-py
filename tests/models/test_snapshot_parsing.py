@@ -4,7 +4,7 @@ from io import StringIO
 import pandas as pd
 
 # Import the Snapshot and SnapshotList classes from your module
-from models.snapshot import Snapshot, SnapshotList  # Replace 'your_module' with the actual module name
+from zzv.models import Snapshot, SnapshotList  # Replace 'your_module' with the actual module name
 
 
 class TestSnapshotParsing(unittest.TestCase):

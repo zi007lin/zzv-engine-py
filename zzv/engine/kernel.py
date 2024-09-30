@@ -1,5 +1,3 @@
-# kernel.py
-
 import asyncio
 import logging
 import sys
@@ -7,12 +5,12 @@ from typing import Optional, List, Dict
 
 from fastapi import FastAPI
 
-from common.constants import QUEUE_MANAGER, MSG_MANAGER
-from engine.manager import Manager
-from health.health_report import HealthReport
-from health.status import Status
-from msg_queue.msg_manager import MsgManager
-from msg_queue.queue_manager import QueueManager
+from zzv.common.constants import QUEUE_MANAGER, MSG_MANAGER
+from zzv.engine.manager import Manager
+from zzv.health.health_report import HealthReport
+from zzv.health.status import Status
+from zzv.msgcore.msg_manager import MsgManager
+from zzv.msgcore.queue_manager import QueueManager
 
 logger = logging.getLogger(__name__)
 

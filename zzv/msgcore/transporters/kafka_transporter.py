@@ -3,7 +3,7 @@ import logging
 from colorama import init, Fore
 from confluent_kafka import Producer, KafkaException
 
-from models.snapshot import SnapshotList
+from zzv.models.snapshot import SnapshotList
 
 init(autoreset=True)
 

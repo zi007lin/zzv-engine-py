@@ -1,5 +1,5 @@
 from typing import List
-from health.status import Status  # Import the Status enumeration
+from zzv.health.status import Status  # Import the Status enumeration
 
 class HealthReport:
     """

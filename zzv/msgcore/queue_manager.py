@@ -3,12 +3,12 @@ import logging
 import queue
 from typing import Any, Optional, Dict
 from fastapi import FastAPI
-from common.constants import QUEUE_MANAGER
-from engine.manager import Manager
-from health.health_report import HealthReport
-from health.status import Status
-from models.snapshot import SnapshotList
-from msg_queue.transporters.kafka_transporter import KafkaTransporter
+from zzv.common.constants import QUEUE_MANAGER
+from zzv.engine.manager import Manager
+from zzv.health.health_report import HealthReport
+from zzv.health.status import Status
+from zzv.models.snapshot import SnapshotList
+from zzv.msgcore.transporters.kafka_transporter import KafkaTransporter
 
 logger = logging.getLogger(__name__)
 

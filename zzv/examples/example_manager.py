@@ -1,7 +1,7 @@
 import logging
 
-from health.health_report import HealthReport
-from engine.manager import Manager  # Ensure correct import of the Manager class
+from zzv.health.health_report import HealthReport
+from zzv.engine.manager import Manager  # Ensure correct import of the Manager class
 
 logger = logging.getLogger(__name__)
 

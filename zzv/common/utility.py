@@ -74,7 +74,7 @@ def ensure_screenshot_directory_exists(group_name, custom_datetime):
 
 
 def load_logger_config():
-    config_path = '../config/logger_config.json'
+    config_path = '../../config/logger_config.json'
     if os.path.exists(config_path):
         with open(config_path, 'r') as file:
             config = json.load(file)

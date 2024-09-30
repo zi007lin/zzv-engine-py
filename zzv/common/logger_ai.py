@@ -4,7 +4,7 @@ import os
 import socket
 import sys
 
-from common.utility import load_logger_config
+from zzv.common.utility import load_logger_config
 
 
 def init_logger_ai():

@@ -1,9 +1,7 @@
-# manager.py
-
 from abc import ABC, abstractmethod
-from health.health_report import HealthReport
-from health.status import Status  # Import the Status enumeration
-from health.health import Health  # Import the Health base class
+from zzv.health.health_report import HealthReport
+from zzv.health.status import Status  # Import the Status enumeration
+from zzv.health.health import Health  # Import the Health base class
 
 class Manager(Health, ABC):
     """
