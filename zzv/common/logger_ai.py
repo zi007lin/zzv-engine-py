@@ -3,13 +3,17 @@ import logging
 import os
 import socket
 import sys
-
+from datetime import datetime
 from zzv.common.utility import load_logger_config
 
 
-def init_logger_ai():
+def init_logger_ai(package_name: str = None, logs_root_dir: str = None):
     """
     Initialize and configure the root logger for the AI application.
+
+    :param package_name: Name of the package to use in the log filename, defaults to the current directory name.
+    :param logs_root_dir: Root directory for logs. If None, defaults to '../../logs'.
+    :return: Configured logger
     """
     # Load logger configuration
     try:
@@ -34,6 +38,23 @@ def init_logger_ai():
     log_level_str = os.getenv('LOG_LEVEL', config.get('log_level', 'INFO')).upper()
     log_level = getattr(logging, log_level_str, logging.INFO)
 
+    # Determine the package name and log file name
+    base_dir_name = os.path.basename(os.getcwd()) if not package_name else package_name
+
+    # Determine the logs root directory
+    if logs_root_dir is None:
+        logs_root_dir = os.path.abspath(os.path.join(os.getcwd(), "../../logs"))
+    else:
+        logs_root_dir = os.path.abspath(logs_root_dir)
+
+    # Create the logs directory if it doesn't exist
+    if not os.path.exists(logs_root_dir):
+        os.makedirs(logs_root_dir)
+
+    # Define the dynamic filename based on the current timestamp and package name
+    log_filename = f"{base_dir_name}-{datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}.log"
+    log_file_path = os.path.join(logs_root_dir, log_filename)
+
     # Configure the root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
@@ -45,7 +66,7 @@ def init_logger_ai():
 
     # Set up file and stream handlers
     try:
-        file_handler = logging.FileHandler(config.get('log_file', 'application.log'))
+        file_handler = logging.FileHandler(log_file_path)
         stream_handler = logging.StreamHandler()
 
         # Configure log handlers with the updated format
@@ -57,6 +78,9 @@ def init_logger_ai():
         root_logger.addHandler(file_handler)
         root_logger.addHandler(stream_handler)
 
+        # Print the log file path for confirmation
+        root_logger.info(f"Logging to file: {log_file_path}")
+
     except Exception as e:
         print(f"Error setting up log handlers: {e}", file=sys.stderr)
         # If setting handlers fails, fallback to basic configuration
@@ -64,3 +88,11 @@ def init_logger_ai():
 
     # Ensure proper shutdown
     atexit.register(logging.shutdown)
+
+    return root_logger
+
+
+# Example usage:
+# Initialize the logger with the package name as "zzv" and logs_root_dir as None (default to "../../logs")
+logger = init_logger_ai(package_name="zzv")
+logger.info("Logger initialized successfully.")

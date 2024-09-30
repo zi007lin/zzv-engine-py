@@ -203,6 +203,186 @@ INFO:     127.0.0.1:54608 - "POST /start HTTP/1.1" 200 OK
 INFO:     127.0.0.1:54611 - "GET /health HTTP/1.1" 200 OK
 Health check successful: {'status': 'healthy', 'details': {'manager_name': 'Kernel', 'status': 'OK', 'details': ['QueueManager is healthy', 'Messages in queue: 0', 'Messages enqueued: 0', 'Messages processed: 0', 'Messages sent: 0', 'MsgManager is healthy', 'ExampleManager health check successful']}}
 ```
+Based on the existing `logger_ai.py` file, I'll modify it to dynamically generate the log filename based on the package name and include an optional `logs_root_dir` parameter. Then, I'll update the `README.md` file to reflect these changes.
+
+### Modified `logger_ai.py`
+
+Here's the updated `logger_ai.py` file with the new functionality:
+
+```python
+import atexit
+import logging
+import os
+import socket
+import sys
+from datetime import datetime
+from zzv.common.utility import load_logger_config
+
+
+def init_logger_ai(package_name: str = None, logs_root_dir: str = None):
+    """
+    Initialize and configure the root logger for the AI application.
+
+    :param package_name: Name of the package to use in the log filename, defaults to the current directory name.
+    :param logs_root_dir: Root directory for logs. If None, defaults to '../../logs'.
+    :return: Configured logger
+    """
+    # Load logger configuration
+    try:
+        config = load_logger_config()
+    except Exception as e:
+        # Fallback to default configuration if loading fails
+        print(f"Error loading logger configuration: {e}", file=sys.stderr)
+        config = {
+            'log_format': '%(asctime)s - %(hostname)s - %(name)s - %(levelname)s - %(message)s',
+            'log_file': 'application.log',
+            'log_level': 'INFO',
+        }
+
+    # Get the hostname
+    hostname = socket.gethostname()
+
+    # Update the log format with the hostname
+    log_format = config.get('log_format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    log_format = log_format.replace('%(hostname)s', hostname)
+
+    # Set log level from environment variable or default to the config file setting
+    log_level_str = os.getenv('LOG_LEVEL', config.get('log_level', 'INFO')).upper()
+    log_level = getattr(logging, log_level_str, logging.INFO)
+
+    # Determine the package name and log file name
+    base_dir_name = os.path.basename(os.getcwd()) if not package_name else package_name
+
+    # Determine the logs root directory
+    if logs_root_dir is None:
+        logs_root_dir = os.path.abspath(os.path.join(os.getcwd(), "../../logs"))
+    else:
+        logs_root_dir = os.path.abspath(logs_root_dir)
+
+    # Create the logs directory if it doesn't exist
+    if not os.path.exists(logs_root_dir):
+        os.makedirs(logs_root_dir)
+
+    # Define the dynamic filename based on the current timestamp and package name
+    log_filename = f"{base_dir_name}-{datetime.now().strftime('%Y-%m-%dT%H-%M-%S')}.log"
+    log_file_path = os.path.join(logs_root_dir, log_filename)
+
+    # Configure the root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+
+    # Clear existing handlers to prevent duplicate logs
+    while root_logger.handlers:
+        handler = root_logger.handlers.pop()
+        handler.close()
+
+    # Set up file and stream handlers
+    try:
+        file_handler = logging.FileHandler(log_file_path)
+        stream_handler = logging.StreamHandler()
+
+        # Configure log handlers with the updated format
+        formatter = logging.Formatter(log_format)
+        file_handler.setFormatter(formatter)
+        stream_handler.setFormatter(formatter)
+
+        # Add handlers to the root logger
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(stream_handler)
+
+        # Print the log file path for confirmation
+        root_logger.info(f"Logging to file: {log_file_path}")
+
+    except Exception as e:
+        print(f"Error setting up log handlers: {e}", file=sys.stderr)
+        # If setting handlers fails, fallback to basic configuration
+        logging.basicConfig(level=log_level, format=log_format)
+
+    # Ensure proper shutdown
+    atexit.register(logging.shutdown)
+
+    return root_logger
+
+
+# Example usage:
+# Initialize the logger with the package name as "zzv" and logs_root_dir as None (default to "../../logs")
+logger = init_logger_ai(package_name="zzv")
+logger.info("Logger initialized successfully.")
+```
+
+## Logging Configuration
+
+### Configuring Log Files
+
+The `logger_ai.py` script initializes and configures logging for the application. By default, log files will be created in the `../../logs` directory (relative to the script's location) and named using the format:
+
+```
+<package_name>-YYYY-MM-DDTHH-MM-SS.log
+```
+
+#### Parameters for `init_logger_ai` Function:
+
+- **`package_name`**:  
+  Name of the package to use in the log filename. If not provided, it defaults to the current working directory name.
+
+- **`logs_root_dir`**:  
+  Root directory for logs. If not provided, it defaults to `../../logs`. This parameter allows you to customize where the logs are saved.
+
+### Example Usage:
+
+1. **Using Default Settings**:
+
+   ```python
+   from logger_ai import init_logger_ai
+   logger = init_logger_ai(package_name="zzv")
+   logger.info("Default logger initialized successfully.")
+   ```
+
+   The logs will be saved in the `../../logs` directory with filenames like:
+
+   ```
+   ../../logs/zzv-2024-10-01T12-30-00.log
+   ```
+
+2. **Specifying a Custom Logs Directory**:
+
+   ```python
+   logger = init_logger_ai(package_name="zzv-streamer-py", logs_root_dir="/var/logs/zzv-streamer")
+   logger.info("Logger with custom logs directory initialized successfully.")
+   ```
+
+   The logs will be saved in the `/var/logs/zzv-streamer` directory with filenames like:
+
+   ```
+   /var/logs/zzv-streamer/zzv-streamer-py-2024-10-01T12-30-00.log
+   ```
+
+3. **Relative Logs Directory**:
+
+   ```python
+   logger = init_logger_ai(package_name="zzv", logs_root_dir="relative/logs/path")
+   logger.info("Logger with relative logs directory initialized successfully.")
+   ```
+
+   The logs will be saved in the `relative/logs/path` directory relative to the current working directory.
+
+### Setting Log Levels
+You can specify the log level using the `LOG_LEVEL` environment variable or by setting it in the configuration file. The log levels can be set to `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`.
+
+### Log Format
+The log format includes the following fields:
+
+```
+%(asctime)s - %(hostname)s - %(name)s - %(levelname)s - %(message)s
+```
+
+- `%(asctime)s`: Timestamp of the log entry.
+- `%(hostname)s`: Hostname of the machine running the application.
+- `%(name)s`: Name of the logger or module.
+- `%(levelname)s`: Log level (INFO, DEBUG, etc.).
+- `%(message)s`: Log message content.
+
+These fields can be customized in the configuration file (`logger_config.json`) or directly in the script.
 
 ### Additional Options for Building
 - To include additional directories or modules, use the `--add-data` or `--hidden-import` options:
