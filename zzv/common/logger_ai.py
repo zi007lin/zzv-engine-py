@@ -91,9 +91,3 @@ def init_logger_ai(package_name: str = None, logs_root_dir: str = None, logger_c
     atexit.register(logging.shutdown)
 
     return root_logger
-
-
-# Example usage:
-# Initialize the logger with the package name as "zzv" and logs_root_dir as None (default to "../../logs")
-logger = init_logger_ai(package_name="zzv")
-logger.info("Logger initialized successfully.")
