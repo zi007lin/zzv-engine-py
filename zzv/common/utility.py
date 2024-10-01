@@ -63,18 +63,22 @@ def load_agent_config(tag_name, config_path=None):
     return config
 
 
-def ensure_screenshot_directory_exists(group_name, custom_datetime):
+def ensure_screenshot_directory_exists(group_name, custom_datetime, directory_path=None):
     """Ensure screenshot directory exists."""
     today_date = custom_datetime.now().strftime('%Y%m%d')
-    directory_path = os.path.join(COMMON_ROOT, '..', '..', 'data', group_name, today_date)
+    if directory_path is None:
+        directory_path = os.path.join(COMMON_ROOT, '..', '..', 'data', group_name, today_date)
+
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
         print(f"Directory created: {directory_path}")
     return directory_path
 
 
-def load_logger_config():
-    config_path = '../../config/logger_config.json'
+def load_logger_config(config_path=None):
+    if config_path is None:
+        config_path = '../../config/logger_config.json'
+
     if os.path.exists(config_path):
         with open(config_path, 'r') as file:
             config = json.load(file)

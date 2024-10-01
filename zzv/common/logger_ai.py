@@ -4,10 +4,11 @@ import os
 import socket
 import sys
 from datetime import datetime
+
 from zzv.common.utility import load_logger_config
 
 
-def init_logger_ai(package_name: str = None, logs_root_dir: str = None):
+def init_logger_ai(package_name: str = None, logs_root_dir: str = None, logger_config_path: str = None):
     """
     Initialize and configure the root logger for the AI application.
 
@@ -17,7 +18,7 @@ def init_logger_ai(package_name: str = None, logs_root_dir: str = None):
     """
     # Load logger configuration
     try:
-        config = load_logger_config()
+        config = load_logger_config(config_path=logger_config_path)
     except Exception as e:
         # Fallback to default configuration if loading fails
         print(f"Error loading logger configuration: {e}", file=sys.stderr)
