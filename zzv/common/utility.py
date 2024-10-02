@@ -42,15 +42,38 @@ def get_keys_path(keys_file):
     return keys_path
 
 
-def get_default_config_path(tag_name):
+def generate_config_filename(tag_name: str) -> str:
+    """
+    Generate a configuration filename based on the hostname and tag name.
+
+    Args:
+        tag_name (str): The tag name to include in the configuration filename.
+
+    Returns:
+        str: The generated configuration filename.
+    """
     hostname = socket.gethostname()
     config_filename = f"{hostname}_{tag_name}"
+    return config_filename
+
+
+def get_default_config_path(tag_name: str) -> str:
+    """
+    Get the default configuration path for the given tag name.
+
+    Args:
+        tag_name (str): The tag name to include in the configuration filename.
+
+    Returns:
+        str: The full path to the configuration file.
+    """
+    config_filename = generate_config_filename(tag_name)
     config_path = os.path.join(COMMON_ROOT, '..', 'config', config_filename)
     return config_path
 
 
-def load_agent_config(tag_name, config_path=None):
-    if config_path is None:
+def load_agent_config(tag_name=None, config_path=None):
+    if tag_name is not None:
         config_path = get_default_config_path(tag_name)
 
     if not os.path.exists(config_path):
