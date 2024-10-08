@@ -5,6 +5,7 @@ from typing import Optional, List, Dict
 
 from fastapi import FastAPI
 
+from engine.kernel_aware_manager import KernelAwareManager
 from zzv.common.constants import QUEUE_MANAGER, MSG_MANAGER
 from zzv.engine.manager import Manager
 from zzv.health.health_report import HealthReport
@@ -28,7 +29,7 @@ class Kernel(Manager):
         self.is_running = False  # Track running status
         self._service_access_rules = {}  # Dictionary to hold access rules for services
         self.config = config  # Store the configuration for use in services
-        self.additional_managers = additional_managers or []  # List of additional managers
+        self._additional_managers = additional_managers or []  # List of additional managers
 
         # Load Kafka broker information from config
         kafka_brokers = self.config.get('kafka_brokers',
@@ -45,12 +46,17 @@ class Kernel(Manager):
         """
         Register additional managers based on the provided configuration.
         """
-        for manager_config in self.additional_managers:
+        for manager_config in self._additional_managers:
             name = manager_config.get("name")
             instance = manager_config.get("instance")
             allowed_callers = manager_config.get("allowed_callers", ["*"])
 
             if name and instance:
+                # Set the kernel reference if the manager implements KernelAwareManager
+                if isinstance(instance, KernelAwareManager):
+                    instance.set_kernel(self)
+                    logger.info(f"Kernel reference set for manager '{name}'.")
+
                 self._register_service(name, instance, allowed_callers=allowed_callers)
                 logger.info(f"Additional manager '{name}' registered successfully.")
             else:
@@ -97,6 +103,7 @@ class Kernel(Manager):
         logger.info("Starting all registered services asynchronously...")
         self.is_running = True  # Set running status to True when starting
 
+        # Start core services
         for name, service in self._services.items():
             if isinstance(service, Manager):
                 try:
@@ -107,12 +114,25 @@ class Kernel(Manager):
                     logger.error(f"Failed to start service {name}: {e}")
                     sys.exit(5)  # Exit with error code 5 for service start errors
 
+        # Start additional managers
+        for manager in self._additional_managers:
+            instance = manager.get("instance")
+            if instance and isinstance(instance, KernelAwareManager):
+                try:
+                    await instance.start()  # Await each additional manager's start
+                    logger.info(f"Additional manager '{manager['name']}' started successfully.")
+                except Exception as e:
+                    logger.error(f"Failed to start additional manager '{manager['name']}': {e}")
+                    sys.exit(5)
+
     async def close(self):
         """
         Stop all registered services asynchronously.
         """
         logger.info("Stopping all registered services asynchronously...")
         self.is_running = False  # Set running status to False when stopping
+
+        # Stop core services
         for name, service in self._services.items():
             if isinstance(service, Manager):
                 try:
@@ -121,6 +141,17 @@ class Kernel(Manager):
                 except Exception as e:
                     logger.error(f"Failed to stop service {name}: {e}")
                     sys.exit(6)  # Exit with error code 6 for service stop errors
+
+        # Stop additional managers
+        for manager in self._additional_managers:
+            instance = manager.get("instance")
+            if instance and isinstance(instance, KernelAwareManager):
+                try:
+                    await instance.close()  # Await each additional manager's close
+                    logger.info(f"Additional manager '{manager['name']}' stopped successfully.")
+                except Exception as e:
+                    logger.error(f"Failed to stop additional manager '{manager['name']}': {e}")
+                    sys.exit(6)
 
     def get_health(self) -> HealthReport:
         """

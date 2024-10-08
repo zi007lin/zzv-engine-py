@@ -1,0 +1,18 @@
+namespace snapshot;
+
+// Table equivalent to the Protobuf 'Snapshot' message
+table Snapshot {
+  id: string;      // Corresponds to 'string id = 1;'
+  data: string;    // Corresponds to 'string data = 2;'
+}
+
+// Table equivalent to the Protobuf 'SnapshotList' message
+table SnapshotList {
+  snapshots: [Snapshot];  // A vector (array) of Snapshot tables
+  key: string;            // Corresponds to 'string key = 2;'
+  time: long;             // Corresponds to 'int64 time = 3;'
+  name: string;           // Corresponds to 'string name = 4;' (no default value)
+}
+
+// The root table of the schema
+root_type SnapshotList;
