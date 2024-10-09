@@ -1,15 +1,14 @@
 import argparse
 import time
 
-import flatbuffers  # Import flatbuffers for serialization
+import flatbuffers
 from colorama import init, Fore
 from confluent_kafka import Producer, KafkaException
 
-from schemas.snapshot import Snapshot, SnapshotList  # Assuming snapshot schemas are available
-
+from schemas.snapshot import Snapshot, SnapshotList
+import time
 init(autoreset=True)
 
-# Kafka cluster configuration settings
 kafka_brokers = '31.220.102.46:29092,31.220.102.46:29094'
 
 producer_conf = {
@@ -18,11 +17,10 @@ producer_conf = {
     'acks': 'all',
     'retries': 5,
     'retry.backoff.ms': 500,
-    'socket.timeout.ms': 10000,  # 10 seconds
+    'socket.timeout.ms': 10000,
 }
 
 
-# Delivery callback for producer to report the result of the produce request
 def delivery_report(err, msg):
     if err is not None:
         print(Fore.RED + f"Delivery failed for message {msg.key()}: {err}")
@@ -38,20 +36,25 @@ def produce_message(producer, message, key):
         print(Fore.RED + f"Error while producing: {e}")
 
 
-# Serialization function copied from test_snapshotlist.py
-def serialize_snapshot_list(builder, snapshots, key, time, name):
+def serialize_snapshot_list(snapshots, key, time, name):
+    builder = flatbuffers.Builder(1024)
     snapshot_offsets = []
-    for snapshot in snapshots:
-        id_offset = builder.CreateString(snapshot['id'])
-        data_offset = builder.CreateString(snapshot['data'])
 
-        Snapshot.Start(builder)
-        Snapshot.AddId(builder, id_offset)
-        Snapshot.AddData(builder, data_offset)
-        snapshot_offset = Snapshot.End(builder)
+    for snapshot in snapshots:
+        timestamp_offset = builder.CreateString(snapshot['Timestamp'])
+        symbol_offset = builder.CreateString(snapshot['Symbol'])
+
+        Snapshot.SnapshotStart(builder)
+        Snapshot.SnapshotAddTimestamp(builder, timestamp_offset)
+        Snapshot.SnapshotAddZb1BarsC9(builder, snapshot['zb1BarsC9'])
+        Snapshot.SnapshotAddZb1SideC10(builder, snapshot['zb1SideC10'])
+        Snapshot.SnapshotAddZb1MarkC11(builder, snapshot['zb1MarkC11'])
+        Snapshot.SnapshotAddZb1PnlC12(builder, snapshot['zb1PnLC12'])
+        Snapshot.SnapshotAddSymbol(builder, symbol_offset)
+        snapshot_offset = Snapshot.SnapshotEnd(builder)
         snapshot_offsets.append(snapshot_offset)
 
-    SnapshotList.StartSnapshotsVector(builder, len(snapshot_offsets))
+    SnapshotList.SnapshotListStartSnapshotsVector(builder, len(snapshot_offsets))
     for offset in reversed(snapshot_offsets):
         builder.PrependUOffsetTRelative(offset)
     snapshots_vector = builder.EndVector()
@@ -59,39 +62,30 @@ def serialize_snapshot_list(builder, snapshots, key, time, name):
     key_offset = builder.CreateString(key)
     name_offset = builder.CreateString(name)
 
-    SnapshotList.Start(builder)
-    SnapshotList.AddSnapshots(builder, snapshots_vector)
-    SnapshotList.AddKey(builder, key_offset)
-    SnapshotList.AddTime(builder, time)
-    SnapshotList.AddName(builder, name_offset)
-    snapshot_list = SnapshotList.End(builder)
+    SnapshotList.SnapshotListStart(builder)
+    SnapshotList.SnapshotListAddSnapshots(builder, snapshots_vector)
+    SnapshotList.SnapshotListAddKey(builder, key_offset)
+    SnapshotList.SnapshotListAddTime(builder, time)
+    SnapshotList.SnapshotListAddName(builder, name_offset)
+    snapshot_list = SnapshotList.SnapshotListEnd(builder)
 
     builder.Finish(snapshot_list)
     return builder.Output()
 
 
 def create_and_send_snapshot_message(producer):
-    # Sample data similar to the test in test_snapshotlist.py
     snapshots = [
-        {'id': 'snapshot_001', 'data': 'data_001'},
-        {'id': 'snapshot_002', 'data': 'data_002'},
-        {'id': 'snapshot_003', 'data': 'data_003'},
+        {'Timestamp': '1702132066', 'zb1BarsC9': 5.0, 'zb1SideC10': -1.0, 'zb1MarkC11': 134.68,
+         'zb1PnLC12': 0.54, 'Symbol': 'NVDA'},
+        {'Timestamp': '2702132066', 'zb1BarsC9': 3.0, 'zb1SideC10': 1.0, 'zb1MarkC11': 45.69,
+         'zb1PnLC12': 0.16, 'Symbol': 'SMCI'}
     ]
     key = 'unique-key-123'
-    time = 1633072800  # Example timestamp (Unix time)
+    time = f"1702132066"
     name = 'TestSnapshotList'
 
-    # Create a new FlatBuffer builder
-    builder = flatbuffers.Builder(1024)
-
-    # Serialize SnapshotList
-    serialized_data = serialize_snapshot_list(builder, snapshots, key, time, name)
-
-    # Convert serialized_data (bytearray) to bytes
-    serialized_data_bytes = bytes(serialized_data)
-
-    # Produce the serialized message
-    produce_message(producer, serialized_data_bytes, key)
+    serialized_data = serialize_snapshot_list(snapshots, key, time, name)
+    produce_message(producer, serialized_data, key)
 
 
 def main():
@@ -105,7 +99,7 @@ def main():
         print(Fore.CYAN + f"Kafka Producer Started - Blasting {args.blast} messages")
         for i in range(args.blast):
             create_and_send_snapshot_message(producer)
-            time.sleep(1)  # Add sleep to simulate delay between messages
+            time.sleep(1)
     else:
         print(Fore.CYAN + "Kafka Producer Started - Sending single serialized SnapshotList message")
         create_and_send_snapshot_message(producer)
