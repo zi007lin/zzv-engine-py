@@ -2,16 +2,20 @@ namespace snapshot;
 
 // Table equivalent to the Protobuf 'Snapshot' message
 table Snapshot {
-  id: string;      // Corresponds to 'string id = 1;'
-  data: string;    // Corresponds to 'string data = 2;'
+  timestamp: string;        // Changed from 'Timestamp'
+  zb1_bars_c9: float;       // Changed from 'zb1BarsC9'
+  zb1_side_c10: float;      // Changed from 'zb1SideC10'
+  zb1_mark_c11: float;      // Changed from 'zb1MarkC11'
+  zb1_pnl_c12: float;       // Changed from 'zb1PnLC12'
+  symbol: string;           // Changed from 'Symbol'
 }
 
 // Table equivalent to the Protobuf 'SnapshotList' message
 table SnapshotList {
   snapshots: [Snapshot];  // A vector (array) of Snapshot tables
-  key: string;            // Corresponds to 'string key = 2;'
-  time: long;             // Corresponds to 'int64 time = 3;'
-  name: string;           // Corresponds to 'string name = 4;' (no default value)
+  key: string;
+  time: long;
+  name: string;
 }
 
 // The root table of the schema

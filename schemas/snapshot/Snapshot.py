@@ -25,36 +25,88 @@ class Snapshot(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Snapshot
-    def Id(self):
+    def Timestamp(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
     # Snapshot
-    def Data(self):
+    def Zb1BarsC9(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Snapshot
+    def Zb1SideC10(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Snapshot
+    def Zb1MarkC11(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Snapshot
+    def Zb1PnlC12(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Snapshot
+    def Symbol(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(14))
         if o != 0:
             return self._tab.String(o + self._tab.Pos)
         return None
 
 def SnapshotStart(builder):
-    builder.StartObject(2)
+    builder.StartObject(6)
 
 def Start(builder):
     SnapshotStart(builder)
 
-def SnapshotAddId(builder, id):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(id), 0)
+def SnapshotAddTimestamp(builder, timestamp):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(timestamp), 0)
 
-def AddId(builder, id):
-    SnapshotAddId(builder, id)
+def AddTimestamp(builder, timestamp):
+    SnapshotAddTimestamp(builder, timestamp)
 
-def SnapshotAddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+def SnapshotAddZb1BarsC9(builder, zb1BarsC9):
+    builder.PrependFloat32Slot(1, zb1BarsC9, 0.0)
 
-def AddData(builder, data):
-    SnapshotAddData(builder, data)
+def AddZb1BarsC9(builder, zb1BarsC9):
+    SnapshotAddZb1BarsC9(builder, zb1BarsC9)
+
+def SnapshotAddZb1SideC10(builder, zb1SideC10):
+    builder.PrependFloat32Slot(2, zb1SideC10, 0.0)
+
+def AddZb1SideC10(builder, zb1SideC10):
+    SnapshotAddZb1SideC10(builder, zb1SideC10)
+
+def SnapshotAddZb1MarkC11(builder, zb1MarkC11):
+    builder.PrependFloat32Slot(3, zb1MarkC11, 0.0)
+
+def AddZb1MarkC11(builder, zb1MarkC11):
+    SnapshotAddZb1MarkC11(builder, zb1MarkC11)
+
+def SnapshotAddZb1PnlC12(builder, zb1PnlC12):
+    builder.PrependFloat32Slot(4, zb1PnlC12, 0.0)
+
+def AddZb1PnlC12(builder, zb1PnlC12):
+    SnapshotAddZb1PnlC12(builder, zb1PnlC12)
+
+def SnapshotAddSymbol(builder, symbol):
+    builder.PrependUOffsetTRelativeSlot(5, flatbuffers.number_types.UOffsetTFlags.py_type(symbol), 0)
+
+def AddSymbol(builder, symbol):
+    SnapshotAddSymbol(builder, symbol)
 
 def SnapshotEnd(builder):
     return builder.EndObject()
