@@ -61,9 +61,5 @@ class KafkaTransporter:
 
     async def route_message(self, message):
         """Route messages from the QueueManager to Kafka."""
-        # Example for sending SnapshotList:
-        if isinstance(message, SnapshotList):
-            key = "snapshot_key"  # You can customize the key based on message content
-            self.send_to_kafka("snapshots", key, str(message))  # Convert message to string
-        else:
-            logger.warning(f"Unhandled message type: {type(message)}")
+        key = "snapshot_key"  # You can customize the key based on message content
+        self.send_to_kafka("snapshots", key, str(message))  # Convert message to string

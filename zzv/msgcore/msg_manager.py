@@ -59,15 +59,18 @@ class MsgManager(Manager):
 
     def handle_snapshot_list_message(self, message_data: SnapshotList):
         """Handle SnapshotList messages and route them to the QueueManager."""
-        # Access QueueManager through the Kernel with access validation
-        queue_manager = self.kernel.get_service(self, QUEUE_MANAGER)
-        if queue_manager:
-            queue_manager.handle_message(SNAPSHOT_LIST, message_data)
-            self.stats["messages_routed"] += 1  # Update message routed count
-            logger.info(f"{SNAPSHOT_LIST} message routed to {QUEUE_MANAGER}.")
-        else:
-            self.stats["error_count"] += 1  # Update error count if QueueManager is not accessible
-            logger.error(f"{QUEUE_MANAGER} is not accessible.")
+        try:
+            # Access QueueManager through the Kernel with access validation
+            queue_manager = self.kernel.get_service(QUEUE_MANAGER, caller=self)
+            if queue_manager:
+                queue_manager.handle_message(SNAPSHOT_LIST, message_data)
+                self.stats["messages_routed"] += 1  # Update message routed count
+                logger.info(f"{SNAPSHOT_LIST} message routed to {QUEUE_MANAGER}.")
+            else:
+                self.stats["error_count"] += 1  # Update error count if QueueManager is not accessible
+                logger.error(f"{QUEUE_MANAGER} is not accessible.")
+        except Exception as e:
+            logger.error(f"Error handle_snapshot_list_message: {e}")
 
     def get_health(self):
         """

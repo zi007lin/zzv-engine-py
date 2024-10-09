@@ -1,8 +1,11 @@
 import argparse
 import time
 
+import flatbuffers  # Import flatbuffers for serialization
 from colorama import init, Fore
 from confluent_kafka import Producer, KafkaException
+
+from schemas.snapshot import Snapshot, SnapshotList  # Assuming snapshot schemas are available
 
 init(autoreset=True)
 
@@ -35,40 +38,60 @@ def produce_message(producer, message, key):
         print(Fore.RED + f"Error while producing: {e}")
 
 
-def blast_messages(count, sleep_time):
-    producer = Producer(producer_conf)
-    print(Fore.CYAN + f"Kafka Producer Started - Blasting {count} messages")
+# Serialization function copied from test_snapshotlist.py
+def serialize_snapshot_list(builder, snapshots, key, time, name):
+    snapshot_offsets = []
+    for snapshot in snapshots:
+        id_offset = builder.CreateString(snapshot['id'])
+        data_offset = builder.CreateString(snapshot['data'])
 
-    for i in range(count):
-        message = f"Test message {i + 1}"
-        key = f"key_{i + 1}"
-        produce_message(producer, message, key)
-        time.sleep(sleep_time)  # Sleep for specified time
+        Snapshot.Start(builder)
+        Snapshot.AddId(builder, id_offset)
+        Snapshot.AddData(builder, data_offset)
+        snapshot_offset = Snapshot.End(builder)
+        snapshot_offsets.append(snapshot_offset)
 
-    producer.flush(timeout=10)
-    print(Fore.CYAN + "Message blasting completed")
+    SnapshotList.StartSnapshotsVector(builder, len(snapshot_offsets))
+    for offset in reversed(snapshot_offsets):
+        builder.PrependUOffsetTRelative(offset)
+    snapshots_vector = builder.EndVector()
+
+    key_offset = builder.CreateString(key)
+    name_offset = builder.CreateString(name)
+
+    SnapshotList.Start(builder)
+    SnapshotList.AddSnapshots(builder, snapshots_vector)
+    SnapshotList.AddKey(builder, key_offset)
+    SnapshotList.AddTime(builder, time)
+    SnapshotList.AddName(builder, name_offset)
+    snapshot_list = SnapshotList.End(builder)
+
+    builder.Finish(snapshot_list)
+    return builder.Output()
 
 
-def interactive_mode():
-    producer = Producer(producer_conf)
-    print(Fore.CYAN + "Kafka Producer Started - Interactive Mode")
-    print(Fore.YELLOW + "Enter 'Y' to send a new message, 'B' to blast messages, or 'X' to exit")
+def create_and_send_snapshot_message(producer):
+    # Sample data similar to the test in test_snapshotlist.py
+    snapshots = [
+        {'id': 'snapshot_001', 'data': 'data_001'},
+        {'id': 'snapshot_002', 'data': 'data_002'},
+        {'id': 'snapshot_003', 'data': 'data_003'},
+    ]
+    key = 'unique-key-123'
+    time = 1633072800  # Example timestamp (Unix time)
+    name = 'TestSnapshotList'
 
-    while True:
-        user_input = input().strip().upper()
-        if user_input == 'X':
-            break
-        elif user_input == 'Y':
-            message = input("Enter your message: ")
-            produce_message(producer, message, 'interactive_key')
-            producer.flush(timeout=10)
-        elif user_input == 'B':
-            count = int(input("Enter number of messages to blast: "))
-            blast_messages(count, 1e-9)  # 1 nanosecond sleep
-        else:
-            print(Fore.YELLOW + "Invalid input. Enter 'Y' to send a new message, 'B' to blast messages, or 'X' to exit")
+    # Create a new FlatBuffer builder
+    builder = flatbuffers.Builder(1024)
 
-    print(Fore.CYAN + "Producer terminated")
+    # Serialize SnapshotList
+    serialized_data = serialize_snapshot_list(builder, snapshots, key, time, name)
+
+    # Convert serialized_data (bytearray) to bytes
+    serialized_data_bytes = bytes(serialized_data)
+
+    # Produce the serialized message
+    produce_message(producer, serialized_data_bytes, key)
 
 
 def main():
@@ -76,10 +99,19 @@ def main():
     parser.add_argument("--blast", type=int, help="Number of messages to blast")
     args = parser.parse_args()
 
+    producer = Producer(producer_conf)
+
     if args.blast:
-        blast_messages(args.blast, 1e-9)  # 1 nanosecond sleep
+        print(Fore.CYAN + f"Kafka Producer Started - Blasting {args.blast} messages")
+        for i in range(args.blast):
+            create_and_send_snapshot_message(producer)
+            time.sleep(1)  # Add sleep to simulate delay between messages
     else:
-        interactive_mode()
+        print(Fore.CYAN + "Kafka Producer Started - Sending single serialized SnapshotList message")
+        create_and_send_snapshot_message(producer)
+
+    producer.flush(timeout=10)
+    print(Fore.CYAN + "Message sending completed")
 
 
 if __name__ == '__main__':

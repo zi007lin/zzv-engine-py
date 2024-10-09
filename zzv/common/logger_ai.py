@@ -7,13 +7,13 @@ from datetime import datetime
 
 from zzv.common.utility import load_logger_config
 
-
 def init_logger_ai(package_name: str = None, logs_root_dir: str = None, logger_config_path: str = None):
     """
     Initialize and configure the root logger for the AI application.
 
     :param package_name: Name of the package to use in the log filename, defaults to the current directory name.
     :param logs_root_dir: Root directory for logs. If None, defaults to '../../logs'.
+    :param logger_config_path: Path to the logger configuration file.
     :return: Configured logger
     """
     # Load logger configuration
@@ -65,10 +65,12 @@ def init_logger_ai(package_name: str = None, logs_root_dir: str = None, logger_c
         handler = root_logger.handlers.pop()
         handler.close()
 
-    # Set up file and stream handlers
+    # Set up file and stream handlers with UTF-8 support
     try:
-        file_handler = logging.FileHandler(log_file_path)
-        stream_handler = logging.StreamHandler()
+        file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
+        stream_handler = logging.StreamHandler(sys.stdout)
+        # Set stream handler to use UTF-8 encoding
+        stream_handler.stream = open(sys.stdout.fileno(), 'w', encoding='utf-8', buffering=1)
 
         # Configure log handlers with the updated format
         formatter = logging.Formatter(log_format)
