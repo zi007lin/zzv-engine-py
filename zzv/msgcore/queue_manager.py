@@ -30,11 +30,6 @@ class QueueManager(Manager):
             "messages_sent": 0  # Number of messages successfully sent
         }
 
-        self.message_handlers = {
-            "SnapshotList": self.handle_snapshot_list_message,
-            # Add other message handlers as needed
-        }
-
     async def start(self):
         """Start the QueueManager and KafkaTransporter services asynchronously."""
         logger.info(f"Starting {QUEUE_MANAGER}...")
@@ -55,19 +50,9 @@ class QueueManager(Manager):
         self.kafka_transporter.stop()  # Stop KafkaTransporter
 
     def handle_message(self, message_type: str, message_data: Any):
-        """Handle incoming messages based on their type."""
-        handler = self.message_handlers.get(message_type)
-        if handler:
-            handler(message_data)
-        else:
-            logger.warning(f"No handler for message type: {message_type}")
-
-    def handle_snapshot_list_message(self, message_data: Any):
-        """Handle SnapshotList messages."""
-        # Add message to the queue for further processing
         self.sending_queue.put((0, message_data))  # Priority 0 for non-priority messages
         self.stats["messages_enqueued"] += 1  # Update message enqueued count
-        logger.info("SnapshotList message added to the sending queue.")
+        logger.info("message added to the sending queue.")
 
     async def process_messages(self):
         """Process messages in the sending queue."""
@@ -80,7 +65,7 @@ class QueueManager(Manager):
         """Route the message to the appropriate destination."""
         await self.kafka_transporter.route_message(message)  # Send to Kafka
         self.stats["messages_sent"] += 1  # Update message sent count
-        logger.info("Routed SnapshotList message to Kafka...")
+        logger.info("Routed message to Kafka...")
 
 
 def _register_service(self, name: str, service: Any) -> None:

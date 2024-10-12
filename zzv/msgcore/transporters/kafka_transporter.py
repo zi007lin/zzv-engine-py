@@ -1,6 +1,6 @@
-import logging
 import json
-import time
+import logging
+
 from colorama import init, Fore
 from confluent_kafka import Producer, KafkaException
 
@@ -8,8 +8,15 @@ init(autoreset=True)
 
 logger = logging.getLogger(__name__)
 
+
 class KafkaTransporter:
     def __init__(self, kafka_brokers: str):
+        self.sector_map = {
+            'XLK': 0, 'XLV': 1, 'XLF': 2, 'XLY': 3, 'XLI': 4,
+            'XLP': 5, 'XLE': 6, 'XLU': 7, 'XLB': 8, 'XLC': 9, 'XLRE': 10
+        }
+        self.num_partitions = 11  # Total number of partitions
+
         self.producer_conf = {
             'bootstrap.servers': kafka_brokers,
             'client.id': 'vvs-kafka-transporter',
@@ -34,13 +41,25 @@ class KafkaTransporter:
         else:
             logger.warning("Kafka Producer is not initialized.")
 
+    def get_partition(self, key: str):
+        if key in self.sector_map:
+            return self.sector_map[key]
+        return hash(key) % self.num_partitions
+
     def send_to_kafka(self, topic: str, key: str, message: str):
         if not self.producer:
             logger.error("Kafka Producer is not initialized.")
             return
 
         try:
-            self.producer.produce(topic, key=key, value=message.encode('utf-8'), callback=self.delivery_report)
+            partition = self.get_partition(key)
+            self.producer.produce(
+                topic,
+                key=key.encode('utf-8'),
+                value=message.encode('utf-8'),
+                partition=partition,
+                callback=self.delivery_report
+            )
             self.producer.poll(0)
         except KafkaException as e:
             logger.error(f"Error while sending to Kafka: {e}")
@@ -67,18 +86,22 @@ class KafkaTransporter:
             return
 
         try:
-            # Parse the JSON string to validate its structure
             json_data = json.loads(message)
 
-            if 'snapshots' not in json_data:
-                logger.error("Invalid JSON structure: 'snapshots' key not found")
-                return
+            topic = json_data.get('topic', "there is no topic provided!!!")
+            if topic.endswith("!!!"):
+                logger.error(f"Error detected: {topic}")
+                return  # Exit the function if topic is an error
 
-            # Extract key from the JSON data or use a default
-            key = json_data.get('key', f"default_key_{int(time.time() * 1000)}")
+            key = json_data.get('key', "there is no key record provided!!!")
+            if key.endswith("!!!"):
+                logger.error(f"Error detected: {key}")
+                return  # Exit the function if key is an error
 
-            # Send the JSON string directly to Kafka
-            self.send_to_kafka("snapshots", key, message)
+            if key not in self.sector_map:
+                logger.warning(f"Key '{key}' is not a recognized sector. Using default partitioning.")
+
+            self.send_to_kafka(topic, key, message)
 
         except json.JSONDecodeError:
             logger.error("Invalid JSON format in the message")
