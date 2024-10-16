@@ -5,7 +5,7 @@ from typing import Optional, List, Dict
 
 from fastapi import FastAPI
 
-from engine.kernel_aware_manager import KernelAwareManager
+from zzv.engine.kernel_aware_manager import KernelAwareManager
 from zzv.common.constants import QUEUE_MANAGER, MSG_MANAGER
 from zzv.engine.manager import Manager
 from zzv.health.health_report import HealthReport
@@ -109,6 +109,7 @@ class Kernel(Manager):
                 try:
                     # Start each service asynchronously without waiting
                     asyncio.create_task(service.start())
+                    # await service.start()  # Await each service
                     logger.info(f"{name} started asynchronously.")
                 except Exception as e:
                     logger.error(f"Failed to start service {name}: {e}")
