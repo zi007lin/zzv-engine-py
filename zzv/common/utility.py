@@ -1,6 +1,9 @@
+import csv
 import io
 import json
+import logging
 import os
+import re
 import shutil
 import socket
 import time
@@ -8,9 +11,46 @@ from io import BytesIO
 
 import requests  # Add requests for HTTP operations
 import yaml  # Add yaml for configuration handling
+from packaging import version
+
+logger = logging.getLogger(__name__)
 
 # Assuming COMMON_ROOT is defined somewhere globally, or you can define it here
 COMMON_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def clean_requirements(file_path):
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    cleaned_requirements = {}
+    for line in content.splitlines():
+        line = line.strip()
+        if line and not line.startswith('#'):
+            match = re.match(r'^([^=<>]+)([=<>]+.+)?$', line)
+            if match:
+                package, version_spec = match.groups()
+                package = package.lower()
+                if package in cleaned_requirements:
+                    if version_spec and cleaned_requirements[package]:
+                        existing_version = re.findall(r'\d+\.\d+\.\d+', cleaned_requirements[package])
+                        new_version = re.findall(r'\d+\.\d+\.\d+', version_spec)
+                        if existing_version and new_version:
+                            if version.parse(new_version[0]) > version.parse(existing_version[0]):
+                                cleaned_requirements[package] = version_spec
+                    elif version_spec:
+                        cleaned_requirements[package] = version_spec
+                else:
+                    cleaned_requirements[package] = version_spec if version_spec else ''
+
+    sorted_requirements = sorted(cleaned_requirements.items())
+
+    output_content = "\n".join(f"{package}{version_spec or ''}" for package, version_spec in sorted_requirements)
+
+    with open(file_path, 'w') as f:
+        f.write(output_content)
+
+    return output_content
 
 
 def clean_directory(directory_path):
@@ -227,3 +267,34 @@ def load_config_from_bytes(config_bytes: bytes, format: str = 'yaml') -> dict:
         raise ValueError("Unsupported configuration format. Supported formats: 'yaml', 'json'.")
 
     return config
+
+
+def print_snapshots_as_csv(json_string):
+    # Parse the JSON string
+    data = json.loads(json_string)
+
+    # Extract the snapshots
+    snapshots = data.get('snapshots', [])
+
+    # Prepare CSV output
+    output = io.StringIO()
+
+    # Determine fieldnames (assuming all snapshots have the same structure)
+    if snapshots:
+        fieldnames = list(snapshots[0].keys())
+    else:
+        print("No snapshots found in the data.")
+        return
+
+    # Create CSV writer
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+    # Write header
+    writer.writeheader()
+
+    # Write rows
+    for snapshot in snapshots:
+        writer.writerow(snapshot)
+
+    # Print the CSV data
+    logger.info(output.getvalue())

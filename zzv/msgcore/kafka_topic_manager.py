@@ -1,5 +1,5 @@
-from confluent_kafka.admin import AdminClient, ConfigResource, ConfigSource
 from confluent_kafka import KafkaException
+from confluent_kafka.admin import AdminClient, ConfigResource, ConfigSource
 from confluent_kafka.cimpl import NewTopic
 
 

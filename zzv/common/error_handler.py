@@ -1,7 +1,8 @@
-import sys
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
+
 
 def handle_critical_error(manager_name: str, error_message: str, exit_code: int = 1):
     """

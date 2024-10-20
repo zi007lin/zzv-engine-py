@@ -1,11 +1,12 @@
 import json
 import logging
+
 import flatbuffers
 from confluent_kafka import Consumer, KafkaError
-from schemas.snapshot.SnapshotList import SnapshotListStart, SnapshotListAddKey, SnapshotListAddTime, \
-    SnapshotListAddName, SnapshotListAddSnapshots, SnapshotListEnd, SnapshotListStartSnapshotsVector
 from schemas.snapshot.Snapshot import SnapshotStart, SnapshotAddTimestamp, SnapshotAddZb1BarsC9, SnapshotAddZb1SideC10, \
     SnapshotAddZb1MarkC11, SnapshotAddZb1PnlC12, SnapshotAddSymbol, SnapshotEnd
+from schemas.snapshot.SnapshotList import SnapshotListStart, SnapshotListAddKey, SnapshotListAddTime, \
+    SnapshotListAddName, SnapshotListAddSnapshots, SnapshotListEnd, SnapshotListStartSnapshotsVector
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

@@ -4,9 +4,8 @@ import time
 import flatbuffers
 from colorama import init, Fore
 from confluent_kafka import Producer, KafkaException
-
 from schemas.snapshot import Snapshot, SnapshotList
-import time
+
 init(autoreset=True)
 
 kafka_brokers = '31.220.102.46:29092,31.220.102.46:29094'

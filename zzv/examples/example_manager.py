@@ -1,9 +1,10 @@
 import logging
 
-from zzv.health.health_report import HealthReport
 from zzv.engine.manager import Manager  # Ensure correct import of the Manager class
+from zzv.health.health_report import HealthReport
 
 logger = logging.getLogger(__name__)
+
 
 class ExampleManager(Manager):
     def __init__(self):

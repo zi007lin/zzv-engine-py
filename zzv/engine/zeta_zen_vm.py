@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from common.constants import KERNEL
@@ -58,6 +59,7 @@ class ZetaZenVm:
 
     def _setup_endpoints(self):
         """Define custom REST API endpoints for controlling the server and its services."""
+
         @self.app.post('/start')
         async def start_all():
             try:
