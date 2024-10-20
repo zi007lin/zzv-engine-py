@@ -57,7 +57,7 @@ class ZetaZenVm:
         self._setup_endpoints()
 
     def _setup_endpoints(self):
-        """Define custom REST API endpoints for controlling the server and its services."""
+        """Define custom REST API endpoints controlling the server and its services."""
         @self.app.post('/start')
         async def start_all():
             try:
