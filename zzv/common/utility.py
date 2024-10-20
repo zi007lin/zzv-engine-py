@@ -1,3 +1,4 @@
+import csv
 import io
 import json
 import os
@@ -8,6 +9,10 @@ from io import BytesIO
 
 import requests  # Add requests for HTTP operations
 import yaml  # Add yaml for configuration handling
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # Assuming COMMON_ROOT is defined somewhere globally, or you can define it here
 COMMON_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -227,3 +232,33 @@ def load_config_from_bytes(config_bytes: bytes, format: str = 'yaml') -> dict:
         raise ValueError("Unsupported configuration format. Supported formats: 'yaml', 'json'.")
 
     return config
+
+def print_snapshots_as_csv(json_string):
+    # Parse the JSON string
+    data = json.loads(json_string)
+
+    # Extract the snapshots
+    snapshots = data.get('snapshots', [])
+
+    # Prepare CSV output
+    output = io.StringIO()
+
+    # Determine fieldnames (assuming all snapshots have the same structure)
+    if snapshots:
+        fieldnames = list(snapshots[0].keys())
+    else:
+        print("No snapshots found in the data.")
+        return
+
+    # Create CSV writer
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+    # Write header
+    writer.writeheader()
+
+    # Write rows
+    for snapshot in snapshots:
+        writer.writerow(snapshot)
+
+    # Print the CSV data
+    logger.info(output.getvalue())

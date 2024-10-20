@@ -1,4 +1,3 @@
-import logging
 from typing import Any, Dict, List
 
 from fastapi import FastAPI
@@ -7,6 +6,7 @@ from zzv.engine.manager import Manager
 from zzv.health.health_report import HealthReport
 from zzv.health.status import Status
 from zzv.models.snapshot import SnapshotList
+import logging
 
 logger = logging.getLogger(__name__)
 

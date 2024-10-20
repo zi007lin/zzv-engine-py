@@ -3,6 +3,7 @@ import logging
 
 from colorama import init, Fore
 from confluent_kafka import Producer, KafkaException
+from pydantic.v1.validators import validate_json
 
 init(autoreset=True)
 
@@ -80,30 +81,62 @@ class KafkaTransporter:
         }
         return json.dumps(snapshot_list)
 
+    def ensure_dict(self, message):
+        """
+        Ensure that the message is a dictionary.
+        If it's a string, attempt to parse it as JSON.
+
+        :param message: The input message (could be dict or str)
+        :return: tuple (dict or None, str), (parsed_message, error_message)
+        """
+        if isinstance(message, dict):
+            return message, ""
+        elif isinstance(message, str):
+            try:
+                return json.loads(message), ""
+            except json.JSONDecodeError as e:
+                return None, f"Invalid JSON string: {e}"
+        else:
+            return None, f"Unsupported message type: {type(message)}"
+
+    def validate_message(self, message):
+        """
+        Validate the required fields in the message.
+
+        :param message: dict, the message to validate
+        :return: tuple (bool, str), (is_valid, error_message)
+        """
+        required_fields = ['topic', 'key']
+
+        for field in required_fields:
+            if field not in message:
+                return False, f"Missing required field: {field}"
+
+            if not message[field]:
+                return False, f"Empty value for required field: {field}"
+
+        return True, ""
+
     async def route_message(self, message):
-        if not isinstance(message, str):
-            logger.error("Invalid message format: expected JSON string")
+        """
+        Process the message after ensuring it's a dict and validating its contents.
+
+        :param message: The input message (could be dict or str)
+        """
+        # First, ensure the message is a dictionary
+        parsed_message, parse_error = self.ensure_dict(message)
+        if parsed_message is None:
+            logging.error(f"Failed to parse message: {parse_error}")
             return
 
-        try:
-            json_data = json.loads(message)
+        # Now validate the contents
+        is_valid, error_message = self.validate_message(parsed_message)
+        if not is_valid:
+            logging.error(f"Invalid message: {error_message}")
+            return
 
-            topic = json_data.get('topic', "there is no topic provided!!!")
-            if topic.endswith("!!!"):
-                logger.error(f"Error detected: {topic}")
-                return  # Exit the function if topic is an error
+        # If we're here, we have a valid dictionary with required fields
+        topic = parsed_message['topic']
+        key = parsed_message['key']
+        self.send_to_kafka(topic, key, json.dumps(message))
 
-            key = json_data.get('key', "there is no key record provided!!!")
-            if key.endswith("!!!"):
-                logger.error(f"Error detected: {key}")
-                return  # Exit the function if key is an error
-
-            if key not in self.sector_map:
-                logger.warning(f"Key '{key}' is not a recognized sector. Using default partitioning.")
-
-            self.send_to_kafka(topic, key, message)
-
-        except json.JSONDecodeError:
-            logger.error("Invalid JSON format in the message")
-        except Exception as e:
-            logger.error(f"Error processing message: {e}")
