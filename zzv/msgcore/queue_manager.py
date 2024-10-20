@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import queue
+from functools import total_ordering
 from typing import Any, Optional, Dict
 
 from fastapi import FastAPI
@@ -13,6 +14,10 @@ from zzv.msgcore.transporters.kafka_transporter import KafkaTransporter
 
 logger = logging.getLogger(__name__)
 
+@total_ordering
+class ComparableDict(dict):
+    def __lt__(self, other):
+        return id(self) < id(other)
 
 class QueueManager(Manager):
     def __init__(self, kernel, kafka_brokers: str):
@@ -50,7 +55,7 @@ class QueueManager(Manager):
         self.kafka_transporter.stop()  # Stop KafkaTransporter
 
     def handle_message(self, message_type: str, message_data: Any):
-        self.sending_queue.put((0, message_data))  # Priority 0 for non-priority messages
+        self.sending_queue.put((0, ComparableDict(message_data)))
         self.stats["messages_enqueued"] += 1  # Update message enqueued count
         logger.info("message added to the sending queue.")
 
