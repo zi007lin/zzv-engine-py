@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class ProtocolInterface(ABC):
     @abstractmethod
     def serialize(self, obj) -> bytes:

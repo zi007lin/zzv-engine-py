@@ -1,7 +1,9 @@
 import flatbuffers
 from schemas.snapshot.Snapshot import Snapshot  # Adjust the import as per your structure
 from schemas.snapshot.SnapshotList import SnapshotList  # Adjust the import as per your structure
+
 from protocol_interface import ProtocolInterface
+
 
 class FlatBuffersProtocol(ProtocolInterface):
     def serialize(self, obj) -> bytes:

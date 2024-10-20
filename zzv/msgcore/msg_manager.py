@@ -2,11 +2,11 @@ import logging
 from typing import Any, Dict, List
 
 from fastapi import FastAPI
-from zzv.common.constants import QUEUE_MANAGER, SNAPSHOT_LIST, MSG_MANAGER
-from zzv.engine.manager import Manager
-from zzv.health.health_report import HealthReport
-from zzv.health.status import Status
-from zzv.models.snapshot import SnapshotList
+from common.constants import QUEUE_MANAGER, SNAPSHOT_LIST, MSG_MANAGER
+from engine.manager import Manager
+from health.health_report import HealthReport
+from health.status import Status
+from models.snapshot import SnapshotList
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,8 @@ class MsgManager(Manager):
         # Add attributes to track message statistics
         self.stats = {
             "messages_handled": 0,  # Number of messages handled
-            "messages_routed": 0,   # Number of messages routed to other managers
-            "error_count": 0        # Number of errors encountered during message handling
+            "messages_routed": 0,  # Number of messages routed to other managers
+            "error_count": 0  # Number of errors encountered during message handling
         }
 
         # Maintain a list of recently processed messages (for debugging or auditing)
@@ -90,6 +90,7 @@ class MsgManager(Manager):
         Args:
             app (FastAPI): The main FastAPI application where endpoints should be registered.
         """
+
         # Register an endpoint to get statistics of MsgManager
         @app.get(f"/{self.name}/stats")
         async def msg_manager_stats() -> Dict[str, Any]:

@@ -1,5 +1,7 @@
 from abc import abstractmethod
+
 from engine.manager import Manager  # Import the existing Manager class
+
 
 class KernelAwareManager(Manager):
     """
