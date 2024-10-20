@@ -2,11 +2,11 @@ import logging
 from typing import Any, Dict, List
 
 from fastapi import FastAPI
-from zzv.common.constants import QUEUE_MANAGER, SNAPSHOT_LIST, MSG_MANAGER
-from zzv.engine.manager import Manager
-from zzv.health.health_report import HealthReport
-from zzv.health.status import Status
-from zzv.models.snapshot import SnapshotList
+from common.constants import QUEUE_MANAGER, SNAPSHOT_LIST, MSG_MANAGER
+from engine.manager import Manager
+from health.health_report import HealthReport
+from health.status import Status
+from models.snapshot import SnapshotList
 
 logger = logging.getLogger(__name__)
 

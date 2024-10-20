@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from zzv.engine.manager import Manager  # Import the existing Manager class
+from engine.manager import Manager  # Import the existing Manager class
 
 class KernelAwareManager(Manager):
     """
