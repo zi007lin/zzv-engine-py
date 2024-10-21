@@ -13,6 +13,15 @@ from msgcore.transporters.kafka_transporter import KafkaTransporter
 
 logger = logging.getLogger(__name__)
 
+class PrioritizedMessage:
+    """Custom class to hold priority and message data for queue processing."""
+    def __init__(self, priority: int, message_data: Any):
+        self.priority = priority
+        self.message_data = message_data
+
+    def __lt__(self, other):
+        return self.priority < other.priority
+
 
 class QueueManager(Manager):
     def __init__(self, kernel, kafka_brokers: str):
@@ -50,16 +59,21 @@ class QueueManager(Manager):
         self.kafka_transporter.stop()  # Stop KafkaTransporter
 
     def handle_message(self, message_type: str, message_data: Any):
-        self.sending_queue.put((0, message_data))  # Priority 0 for non-priority messages
+        """Handle incoming messages and add them to the queue."""
+        # Add the message to the queue with a default priority of 0 for non-priority messages
+        self.sending_queue.put(PrioritizedMessage(priority=0, message_data=message_data))
         self.stats["messages_enqueued"] += 1  # Update message enqueued count
-        logger.info("message added to the sending queue.")
+        logger.info("Message added to the sending queue.")
 
     async def process_messages(self):
         """Process messages in the sending queue."""
         while not self.sending_queue.empty():
-            _, message = self.sending_queue.get()
-            self.stats["messages_processed"] += 1  # Update message processed count
-            await self.route_message(message)
+            try:
+                message_item = self.sending_queue.get()
+                self.stats["messages_processed"] += 1  # Update message processed count
+                await self.route_message(message_item.message_data)
+            except Exception as e:
+                logger.error(f"Error processing message: {e}")
 
     async def route_message(self, message: Any):
         """Route the message to the appropriate destination."""
@@ -117,3 +131,4 @@ def register_endpoints(self, app: FastAPI):
         }
 
     print(f"Registered endpoints for {self.name}.")
+
