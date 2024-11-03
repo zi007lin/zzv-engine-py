@@ -1,6 +1,5 @@
-from confluent_kafka import KafkaException
-from confluent_kafka.admin import AdminClient, ConfigResource, ConfigSource
-from confluent_kafka.cimpl import NewTopic
+from typing import Dict, Any, Optional, List
+from .transporters.kafka_transporter import KafkaTransporter
 
 
 class KafkaTopicManager:

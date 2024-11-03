@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional
+from .kafka_topic_manager import KafkaTopicManager
+from .transporters.kafka_transporter import KafkaTransporter
 
 
 class ProtocolInterface(ABC):

@@ -1,11 +1,7 @@
 import json
+from typing import Dict, Any, Optional
+from confluent_kafka import KafkaProducer, KafkaConsumer
 import logging
-
-from colorama import init, Fore
-from confluent_kafka import Producer, KafkaException
-from pydantic.v1.validators import validate_json
-
-init(autoreset=True)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +26,7 @@ class KafkaTransporter:
 
     def start(self):
         try:
-            self.producer = Producer(self.producer_conf)
+            self.producer = KafkaProducer(self.producer_conf)
             logger.info("Kafka Producer started successfully.")
         except KafkaException as e:
             logger.error(f"Failed to start Kafka Producer: {e}")
