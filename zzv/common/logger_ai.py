@@ -5,7 +5,7 @@ import socket
 import sys
 from datetime import datetime
 
-from common.utility import load_logger_config
+from zzv.common.utility import load_logger_config
 
 def init_logger_ai(package_name: str = None, logs_root_dir: str = None, logger_config_path: str = None):
     """

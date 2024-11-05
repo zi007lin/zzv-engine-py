@@ -5,13 +5,13 @@ from typing import Optional, List, Dict
 
 from fastapi import FastAPI
 
-from engine.kernel_aware_manager import KernelAwareManager
-from common.constants import QUEUE_MANAGER, MSG_MANAGER
-from engine.manager import Manager
-from health.health_report import HealthReport
-from health.status import Status
-from msgcore.msg_manager import MsgManager
-from msgcore.queue_manager import QueueManager
+from zzv.engine.kernel_aware_manager import KernelAwareManager
+from zzv.common.constants import QUEUE_MANAGER, MSG_MANAGER
+from zzv.engine.manager import Manager
+from zzv.health.health_report import HealthReport
+from zzv.health.status import Status
+from zzv.msgcore.msg_manager import MsgManager
+from zzv.msgcore.queue_manager import QueueManager
 
 logger = logging.getLogger(__name__)
 
